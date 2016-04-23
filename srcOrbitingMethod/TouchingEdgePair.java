@@ -1,10 +1,11 @@
 
 /**
- *
- * @author Stiaan
- * 
  *         Pairs of edges that are touching used in the orbiting method are
  *         stored with the coordinates of the touching point
+ *
+ * @author Stiaan Uyttersprot
+ * 
+
  */
 public class TouchingEdgePair {
 
@@ -13,8 +14,8 @@ public class TouchingEdgePair {
 	private Edge orbEdge;
 	private Coordinate touchPoint;
 	
-	private static double angleRound = 1e-6;
-	private static double round = 1e-4;
+	public static double angleRound = 1e-6;
+	public static double round = 1e-4;
 	
 	// booleans saying if the touching point equals a start or end point from an
 	// edge
@@ -175,14 +176,10 @@ public class TouchingEdgePair {
 		double stationaryAngle = statEdge.getAngle();
 		if (stationaryAngle < 0)
 			stationaryAngle = stationaryAngle + Math.PI * 2;
-//		 System.out.println("stationary angle: " +
-//		 Math.toDegrees(stationaryAngle));
 
 		double orbitingAngle = orbEdge.getAngle();
 		if (orbitingAngle < 0)
 			orbitingAngle = orbitingAngle + Math.PI * 2;
-//		 System.out.println("orbiting angle: " +
-//		 Math.toDegrees(orbitingAngle));
 
 		//Situation 8: one edge is parallel with the other but starts at the end of the other one
 		if ((stationaryAngle <= orbitingAngle + angleRound && stationaryAngle >= orbitingAngle - angleRound ) && ( (touchStatEnd && touchOrbStart)||(touchStatStart&&touchOrbEnd) ) ) {
@@ -357,8 +354,6 @@ public class TouchingEdgePair {
 	}
 
 	public boolean isFeasibleVector(Vector vector) {
-
-//		System.out.println(Math.toDegrees(startAngle) + " -> " + Math.toDegrees(endAngle));
 		
 		// test all possible ranges
 		double vectorAngle = vector.getVectorAngle();		
@@ -378,8 +373,6 @@ public class TouchingEdgePair {
 	}
 	
 	public boolean isFeasibleVectorWithRounding(Vector vector) {
-		
-//		System.out.println(Math.toDegrees(startAngle) + " -> " + Math.toDegrees(endAngle));
 		
 		// test all possible ranges
 		double vectorAngle = vector.getVectorAngle();		

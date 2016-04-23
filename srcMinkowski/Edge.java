@@ -1,7 +1,7 @@
 
 /**
+ * @author Stiaan Uyttersprot
  *
- * @author Stiaan
  */
 public class Edge {
 	private Coordinate startPoint;
@@ -16,11 +16,14 @@ public class Edge {
 	private double smallY;
 	private double bigY;
 		
-	private int edgeLabel; //wordt momenteel niet gebruikt
+	private int edgeLabel; 
 	private boolean polygonA;
 	private boolean turningPoint;
+	private boolean additional = false; //this edge is additional and is not used for track line trips
 	
-	private static double round = 1;
+	private int tripSequenceNumber;
+	
+	private static double round = 1e-5;
 	
 	//values for boundarySearch
 	private boolean positive;
@@ -43,6 +46,18 @@ public class Edge {
 		deltaAngle = edge.getDeltaAngle();
 		turningPoint = edge.isTurningPoint();
 		polygonA = edge.isPolygonA();
+		calculateRanges();
+	}
+	
+	public Edge(Edge edge, boolean add) {
+		startPoint = new Coordinate(edge.getStartPoint());
+		endPoint = new Coordinate(edge.getEndPoint());
+		edgeNumber = edge.getEdgeNumber();
+		edgeAngle =edge.getEdgeAngle();
+		deltaAngle = edge.getDeltaAngle();
+		turningPoint = edge.isTurningPoint();
+		polygonA = edge.isPolygonA();
+		additional = add;
 		calculateRanges();
 	}
 
@@ -206,6 +221,15 @@ public class Edge {
 		return new Coordinate(xCoord, yCoord);
 	}
 
+	//when a translation is taking place, the values of min and max have to be adjusted
+	public void changeRangeValues(double x, double y) {
+		smallX += x;
+		bigX += x;
+		smallY += y;
+		bigY += y;
+		
+	}
+		
 	public double calcClockwiseValue() {
 		
 		//Sum over the edges, (x2-x1)(y2+y1). If the result is positive the curve is clockwise, if it's negative the curve is counter-clockwise.
@@ -254,7 +278,7 @@ public class Edge {
 	@Override
 	public String toString() {
 		return "Edge [startPoint=" + startPoint + ", endPoint=" + endPoint + ", edgeNumber=" + edgeNumber
-				+ ", edgeAngle=" + Math.toDegrees(edgeAngle) + ", deltaAngle=" + Math.toDegrees(deltaAngle) + ", turningPoint=" + turningPoint +", polygon A=" + polygonA + "]";
+				+ ", edgeAngle=" + edgeAngle + ", deltaAngle=" + deltaAngle + ", turningPoint=" + turningPoint +", polygon A=" + polygonA + "]";
 	}
 
 	public boolean isPolygonA() {
@@ -289,20 +313,12 @@ public class Edge {
 		// if the bounding boxes intersect, line intersection
 		// has to be checked
 		if (boundingBoxIntersect(edge)) {
-//			System.out.println("bounding box");
-			// TODO: line intersection
 			if (lineIntersect(edge)) {
-//				System.out.println("lineIntersect");
 				intersectionCoord = calcIntersection(edge);
-				intersection = true;
+				
 				if(containsIntersectionPoint(intersectionCoord)&&edge.containsIntersectionPoint(intersectionCoord)){
-					System.out.println("Contains point");
+					
 					intersection = true;
-//					if(intersectionCoord.equalValuesRounded(edge.getStartPoint())||intersectionCoord.equalValuesRounded(edge.getEndPoint())
-//							||intersectionCoord.equalValuesRounded(startPoint)||intersectionCoord.equalValuesRounded(endPoint)){
-//						System.out.println("endpoint");
-//					}
-//					else intersection = true;
 				}
 			}
 			
@@ -310,7 +326,30 @@ public class Edge {
 		return intersection;
 	}
 	
-	private void calculateRanges() {
+	public boolean testIntersectWithoutBorders(Edge edge) {
+		Coordinate intersectionCoord;
+		boolean intersection = false;
+
+		// if the bounding boxes intersect, line intersection
+		// has to be checked
+		if (boundingBoxIntersect(edge)) {
+			if (lineIntersect(edge)) {
+				intersectionCoord = calcIntersection(edge);
+				
+				if(containsIntersectionPoint(intersectionCoord)&&edge.containsIntersectionPoint(intersectionCoord)){
+					
+					if(intersectionCoord.equalValuesRounded(edge.getStartPoint())||intersectionCoord.equalValuesRounded(edge.getEndPoint())
+							||intersectionCoord.equalValuesRounded(startPoint)||intersectionCoord.equalValuesRounded(endPoint)){
+					}
+					else intersection = true;
+				}
+			}
+			
+		}
+		return intersection;
+	}
+	
+	public void calculateRanges() {
 
 		Coordinate start = getStartPoint();
 		Coordinate end = getEndPoint();
@@ -374,9 +413,38 @@ public class Edge {
 		return true;
 	}
 	
+	public boolean containsPoint(Coordinate intersectionCoord) {
+		boolean onLine;
+		onLine = intersectionCoord.dFunctionCheck(startPoint, endPoint);
+		if(onLine == false){
+			return false;
+		};
+		if(intersectionCoord.getxCoord()<smallX-round){
+			return false;
+		}
+		if(intersectionCoord.getxCoord()>bigX+round){
+			return false;
+		}
+		if(intersectionCoord.getyCoord()<smallY-round){
+			return false;
+		}
+		if(intersectionCoord.getyCoord()>bigY+round){
+			return false;
+		}
+		return true;
+	}
+	
 	public boolean equals(Edge edge) {
 		if(edgeNumber!=edge.getEdgeNumber())return false;
 		if(polygonA!=edge.isPolygonA())return false;
+		return true;
+	}
+	//we need to check the coordinates here, they have to be the same too, not only the edgeNumber and polygon
+	public boolean equalsComplexPolyEdge(Edge edge) {
+		if(edgeNumber!=edge.getEdgeNumber())return false;
+		if(polygonA!=edge.isPolygonA())return false;
+		if(!startPoint.equalValuesRounded(edge.getStartPoint()))return false;
+		if(!endPoint.equalValuesRounded(edge.getEndPoint()))return false;
 		return true;
 	}
 
@@ -385,24 +453,42 @@ public class Edge {
 		Vector vector;
 		// if the orbiting edge is being used for the vector, it needs to be
 		// inversed
-		// this means startPoint-endPoint in stead of endPoint-startPoint
+		// this means startPoint-endPoint instead of endPoint-startPoint
 		vector = new Vector(endPoint.subtract(startPoint), eN, polygonA);
 		if(eN<0){
-//			System.out.println("negVector");
 			vector.setxCoord(-vector.getxCoord());
 			vector.setyCoord(-vector.getyCoord());
-		}
-		else{
-//			System.out.println("posVector");
 		}
 
 		return vector;
 
 	}
 
+	public Coordinate getMiddlePointEdge() {
+		double midxCoord = (startPoint.getxCoord()+endPoint.getxCoord())/2;
+		double midyCoord = (startPoint.getyCoord()+endPoint.getyCoord())/2;
+		return new Coordinate(midxCoord, midyCoord);
+	}
+	
 	public boolean equalValuesRounded(Edge edge) {
 		if(!startPoint.equalValuesRounded(edge.getEndPoint()))return false;
 		if(!endPoint.equalValuesRounded(edge.getEndPoint()))return false;
 		return true;
+	}
+
+	public boolean isAdditional() {
+		return additional;
+	}
+
+	public void setAdditional(boolean additional) {
+		this.additional = additional;
+	}
+
+	public int getTripSequenceNumber() {
+		return tripSequenceNumber;
+	}
+
+	public void setTripSequenceNumber(int tripSequenceNumber) {
+		this.tripSequenceNumber = tripSequenceNumber;
 	}
 }

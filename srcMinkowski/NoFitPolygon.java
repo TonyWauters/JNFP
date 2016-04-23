@@ -3,6 +3,10 @@ import java.util.List;
 
 import javafx.scene.shape.Polygon;
 
+/**
+ * @author Stiaan Uyttersprot
+ *
+ */
 public class NoFitPolygon {
 
 	//a list of the polygons that are contained in the no-fit polygon
@@ -39,6 +43,38 @@ public class NoFitPolygon {
 		orbitingPolygon = new MultiPolygon(nfp.getOrbitingPolygon());
 	}
 
+	public NoFitPolygon(List<List<Edge>> minkowskiCycleList, Vector translationVector){
+		nfpPolygonsList = new ArrayList<>();
+		int nCycles = minkowskiCycleList.size();
+		int outerCycleIndex = 0;
+		double lowestX = Double.MAX_VALUE;
+		double lowestY = Double.MAX_VALUE;
+		List<Edge> edgeList;
+		for(int i = 0; i< minkowskiCycleList.size(); i++){
+			edgeList = minkowskiCycleList.get(i);
+			for(Edge edge: edgeList){
+				if(edge.getStartPoint().getxCoord()<lowestX){
+					lowestX = edge.getStartPoint().getxCoord();
+					outerCycleIndex = i;
+				}
+				if(edge.getStartPoint().getyCoord()<lowestY){
+					lowestY = edge.getStartPoint().getyCoord();
+					outerCycleIndex = i;
+				}
+			}
+		}
+		int currentCycle = outerCycleIndex;
+		for(int i =0; i<nCycles; i++){
+			edgeList = minkowskiCycleList.get(currentCycle);
+			currentCycle = (currentCycle+1)%nCycles;
+			activeList = new ArrayList<>();
+			for(Edge edge: edgeList){
+				activeList.add(edge.getStartPoint().translatedTo(translationVector));
+			}
+			nfpPolygonsList.add(activeList);
+		}
+	}
+	
 	public List<List<Coordinate>> getNfpPolygonsList() {
 		return nfpPolygonsList;
 	}
@@ -76,7 +112,7 @@ public class NoFitPolygon {
 	}
 	
 	
-	//for Graphic image
+	//for Graphical image
 	public Polygon[] toPolygonList(double xSize, double ySize, double sizeFactor) {
 		
 		Polygon[] polygonList = new Polygon[nfpPolygonsList.size()];
@@ -98,13 +134,33 @@ public class NoFitPolygon {
 		nfpPolygonsList.add(activeList);
 	}
 
+	//this method will remove coordinates that aren't necessary to draw the nfp(when more than two points fall on the same line
+	public void removeExcessivePoints(){
+		int start;
+		int checkPoint;
+		for(List<Coordinate> coordinateList: nfpPolygonsList){
+			start = 0;
+			if(coordinateList.size()>1){
+				while(start+1<coordinateList.size()){
+					checkPoint = (start+2)%coordinateList.size();
+					while(coordinateList.size()>1 && start + 1< coordinateList.size()
+							&& coordinateList.get(checkPoint).dFunctionCheck(coordinateList.get(start), coordinateList.get(start+1))){
+						coordinateList.remove(start+1);
+						if(checkPoint>=coordinateList.size())checkPoint = 0;
+					}
+					start++;
+				}
+			}
+			
+		}
+	}
+	
 	@Override
 	public String toString() {
 		String nfp = "";
 		
 		nfp += nfpPolygonsList.size() + "\n";
 		for(List<Coordinate> partList : nfpPolygonsList){
-			if(partList.size()>1)partList.remove(partList.size()-1);
 			nfp+= partList.size();
 			
 			for(Coordinate coord: partList){

@@ -2,7 +2,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Polyline;
 
+/**
+ * @author Stiaan Uyttersprot
+ *
+ */
 public class NoFitPolygon {
 
 	//a list of the polygons that are contained in the no-fit polygon
@@ -77,11 +82,11 @@ public class NoFitPolygon {
 	
 	
 	//for Graphic image
-	public Polygon[] toPolygonList(double xSize, double ySize, double sizeFactor) {
+	public Polyline[] toPolylineList(double xSize, double ySize, double sizeFactor) {
 		
-		Polygon[] polygonList = new Polygon[nfpPolygonsList.size()];
+		Polyline[] polygonList = new Polyline[nfpPolygonsList.size()];
 		for (int i = 0; i < nfpPolygonsList.size(); i++) {
-			polygonList[i] = new Polygon();
+			polygonList[i] = new Polyline();
 			for (Coordinate coord : nfpPolygonsList.get(i)) {
 				polygonList[i].getPoints().add(sizeFactor * coord.getxCoord() + xSize / 2);
 				// yCoord*-1 to invert to normal axis
@@ -91,16 +96,48 @@ public class NoFitPolygon {
 		
 		return polygonList;
 	}
+	
+	//for Graphical image
+		public Polygon[] toPolygonList(double xSize, double ySize, double sizeFactor) {
+			
+			Polygon[] polygonList = new Polygon[nfpPolygonsList.size()];
+			for (int i = 0; i < nfpPolygonsList.size(); i++) {
+				polygonList[i] = new Polygon();
+				for (Coordinate coord : nfpPolygonsList.get(i)) {
+					polygonList[i].getPoints().add(sizeFactor * coord.getxCoord() + xSize / 2);
+					// yCoord*-1 to invert to normal axis
+					polygonList[i].getPoints().add(-1 * sizeFactor * coord.getyCoord() + ySize / 2);
+				}
+			}
+			
+			return polygonList;
+		}
 
 	public void startNewActiveList(Coordinate coord){
 		activeList = new ArrayList<>();
 		activeList.add(new Coordinate(coord));
 		nfpPolygonsList.add(activeList);
 	}
-
-	public boolean pointOnEdge(Coordinate nextStartPoint) {
-		// TODO Auto-generated method stub
-		return false;
+	
+	//this method will remove coordinates that aren't necessary to draw the nfp(when more than two points fall on the same line
+	public void removeExcessivePoints(){
+		int start;
+		int checkPoint;
+		for(List<Coordinate> coordinateList: nfpPolygonsList){
+			start = 0;
+			if(coordinateList.size()>1){
+				while(start+1<coordinateList.size()){
+					checkPoint = (start+2)%coordinateList.size();
+					while(coordinateList.size()>1 && start + 1< coordinateList.size()
+							&& coordinateList.get(checkPoint).dFunctionCheck(coordinateList.get(start), coordinateList.get(start+1))){
+						coordinateList.remove(start+1);
+						if(checkPoint>=coordinateList.size())checkPoint = 0;
+					}
+					start++;
+				}
+			}
+			
+		}
 	}
 
 	public boolean containsPoint(Coordinate coordinate) {
@@ -113,7 +150,6 @@ public class NoFitPolygon {
 				if(testEdge.containsPoint(coordinate))return true;
 				if(partList.get(i).equals(coordinate))return true;
 			}
-			
 		}
 		return false;
 	}
@@ -124,7 +160,6 @@ public class NoFitPolygon {
 		
 		nfp += nfpPolygonsList.size() + "\n";
 		for(List<Coordinate> partList : nfpPolygonsList){
-			if(partList.size()>1)partList.remove(partList.size()-1);
 			nfp+= partList.size();
 			
 			for(Coordinate coord: partList){
@@ -135,6 +170,11 @@ public class NoFitPolygon {
 		}
 		
 		return nfp;
+	}
+
+	public void removeLastDoubleCoordinate() {
+		if(activeList.size()>1)activeList.remove(activeList.size()-1);
+		
 	}
 	
 	

@@ -1,7 +1,7 @@
 
 /**
  *
- * @author Stiaan
+ * @author Stiaan Uyttersprot
  */
 public class Edge {
 	private boolean stationary = false;
@@ -10,7 +10,7 @@ public class Edge {
 	private int edgeNumber;
 	private boolean traversed = false;
 	
-	private static double round = 1e-4;
+	public static double round = 1e-4;
 
 	// values to be used for bounding box intersection
 	private double smallX;
@@ -216,8 +216,7 @@ public class Edge {
 	}
 
 	private boolean contains(Coordinate coord) {
-		// TODO: kijken of het sneller is eerst de waarde van x op te slaan in
-		// een int, of gewoon altijd in coord er naar te callen
+
 		boolean containsX = false;
 		boolean containsY = false;
 		// check x
@@ -240,8 +239,7 @@ public class Edge {
 	}
 	
 	private boolean containsRounded(Coordinate coord) {
-		// TODO: kijken of het sneller is eerst de waarde van x op te slaan in
-		// een int, of gewoon altijd in coord er naar te callen
+		
 		boolean containsX = false;
 		boolean containsY = false;
 		
@@ -452,11 +450,8 @@ public class Edge {
 		// if the bounding boxes intersect, line intersection
 		// has to be checked and the edge may need to be trimmed
 		if (boundingBoxIntersect(edge)) {
-			// TODO: line intersection, trim vector to that
-			// distance
 			if (lineIntersect(edge)) {
 				intersectionCoord = calcIntersection(edge);
-				//intersectionCoord.roundCoord();
 				if(containsIntersectionPoint(intersectionCoord)&&edge.containsIntersectionPoint(intersectionCoord)){
 					if(intersectionCoord.equalValuesRounded(edge.getStartPoint())||intersectionCoord.equalValuesRounded(edge.getEndPoint())
 							||intersectionCoord.equalValuesRounded(startPoint)||intersectionCoord.equalValuesRounded(endPoint)){
@@ -482,5 +477,10 @@ public class Edge {
 				postEdge.getEndPoint().dFunction(startPoint, endPoint) <= round)
 			return true;
 		return false;
+	}
+	
+	public void replaceByNegative() {
+		startPoint.replaceByNegative();
+		endPoint.replaceByNegative();
 	}
 }

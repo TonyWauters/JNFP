@@ -6,10 +6,11 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * @author Stiaan
  * this class supports drawing of multipolygons in javaFX
  * in its current state it only allows the user to draw once
  * trying to call the draw method multiple times in the main method will result in errors
+ * @author Stiaan Uyttersprot
+ * 
  */
 public class DrawJavaFX extends Application{
 	
@@ -19,7 +20,6 @@ public class DrawJavaFX extends Application{
     {
     	double screenSizeX = java.awt.Toolkit.getDefaultToolkit().getScreenSize().getWidth();
     	double screenSizeY = java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-//    	List<Stage> polyPairStageList = PolygonPairStages.drawPolygonPairs();
     	double stageWidth = PolygonPairStages.getSceneSizeX();
     	double stageHeight = PolygonPairStages.getSceneSizeY();
     	int stageNumber = 0;
@@ -39,10 +39,12 @@ public class DrawJavaFX extends Application{
     		
     	}
     	
-    	List<Stage> nfpStages = NoFitPolygonStages.drawNFPFigures();
-    	stageWidth = NoFitPolygonStages.getSceneSizeX();
-    	stageHeight = NoFitPolygonStages.getSceneSizeY();
-    	for(Stage stage : nfpStages){
+    	
+    	
+    	List<Stage> compPolyStages = ComplexPolygonStage.drawAllComplexPolygon();
+    	stageWidth = ComplexPolygonStage.getSceneSizeX();
+    	stageHeight = ComplexPolygonStage.getSceneSizeY();
+    	for(Stage stage : compPolyStages){
     		//stageNumber + 1 to make sure it is inside the screen
     		if(stageWidth*(stageNumber+1)> screenSizeX){
     			stageNumber = 0;
@@ -58,11 +60,10 @@ public class DrawJavaFX extends Application{
     		stageNumber++;
     		
     	}
-    	
-    	List<Stage> compPolyStages = ComplexPolygonStage.drawAllComplexPolygon();
-    	stageWidth = ComplexPolygonStage.getSceneSizeX();
-    	stageHeight = ComplexPolygonStage.getSceneSizeY();
-    	for(Stage stage : compPolyStages){
+    	List<Stage> nfpStages = NoFitPolygonStages.drawNFPFigures();
+    	stageWidth = NoFitPolygonStages.getSceneSizeX();
+    	stageHeight = NoFitPolygonStages.getSceneSizeY();
+    	for(Stage stage : nfpStages){
     		//stageNumber + 1 to make sure it is inside the screen
     		if(stageWidth*(stageNumber+1)> screenSizeX){
     			stageNumber = 0;

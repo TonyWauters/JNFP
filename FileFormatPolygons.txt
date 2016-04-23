@@ -1,0 +1,46 @@
+The inputfile for describing polygons has to be formed in the following structure;
+
+number of holes
+number of coordinates outer polygon
+x-coord1 y-coord1
+x-coord2 y-coord2
+....
+....
+
+number of coordinates hole1
+x-coord1 y-coord1
+x-coord2 y-coord2
+....
+....
+
+number of coordinates hole2
+....
+....
+
+an example of a polygon containing two holes:
+2
+12
+0 100
+200 0
+400 0
+500 200
+600 0
+1000 0
+1000 400
+600 400
+500 300
+400 400
+200 400
+0 300
+
+4
+150 100
+150 300
+350 300
+350 100
+
+4
+600 100
+600 300
+800 300
+800 100

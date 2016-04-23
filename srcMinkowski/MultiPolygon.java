@@ -8,14 +8,15 @@ import java.util.Scanner;
 import javafx.scene.shape.Polygon;
 
 /**
- *
- * @author Stiaan
- * 
  *         this class contains a polygon to be used to generate the no-fit
  *         polygon the polygon exists of coordinates and can have holes
+ * @author Stiaan Uyttersprot
+ * 
+ 
  */
 public class MultiPolygon {
 
+	public static int totalCoords = 0;
 	private int nHoles; // the number of holes
 
 	private Coordinate[] outerPolygon; // the polygon that envelops the holes
@@ -36,18 +37,18 @@ public class MultiPolygon {
 	// constructor reads file to create a polygon
 	MultiPolygon(File file) throws FileNotFoundException {
 
-		// TODO: catch wrong input file format error
 
 		input = new Scanner(file);
 		nHoles = input.nextInt();
 		int nPoints = input.nextInt();// number of points of the polygon that is
 										// currently being read (this value
 										// changes when holes are read too)
-
+		totalCoords+=nPoints;
 		// used for autoscaling in drawtool
 		double readX;
 		double readY;
 
+		
 		outerPolygon = new Coordinate[nPoints];
 		holes = new Coordinate[nHoles][];
 
@@ -71,11 +72,11 @@ public class MultiPolygon {
 			
 		}
 		
-		if(checkClockwise(outerPolygon)){
+//		if(checkClockwise(outerPolygon)){
 			
 			//changeClockOrientation(outerPolygon);
 
-		}
+//		}
 
 		for (int i = 0; i < nHoles; i++) {
 
@@ -86,9 +87,9 @@ public class MultiPolygon {
 				holes[i][j] = new Coordinate(input.nextDouble(), input.nextDouble());
 			}
 			
-			if(!checkClockwise(holes[i])){
+//			if(!checkClockwise(holes[i])){
 				//changeClockOrientation(holes[i]);
-			}
+//			}
 		}
 		input.close();
 
@@ -243,9 +244,9 @@ public class MultiPolygon {
 
 		Polygon polygon = new Polygon();
 		for (Coordinate coord : outerPolygon) {
-			// add 300 to coord to move axis
+			// add xSize/2 to coord to move axis
 			polygon.getPoints().add(sizeFactor * coord.getxCoord() + xSize / 2);
-			// yCoord*-1 to invert to normal axis and add 700 to move axis
+			// yCoord*-1 to invert to normal axis and add ySize/2 to move axis
 			polygon.getPoints().add(-1 * sizeFactor * coord.getyCoord() + ySize / 2);
 		}
 
@@ -264,6 +265,28 @@ public class MultiPolygon {
 			}
 		}
 		return polyHoles;
+	}
+	
+	public void translate(double x, double y) {
+
+		for (Coordinate coord : outerPolygon) {
+			coord.move(x, y);
+		}
+
+		for (Coordinate[] hole : holes) {
+			for (Coordinate coord : hole) {
+				coord.move(x, y);
+			}
+		}
+		//for the edges the new minimum and maximum values need to be recalculated
+		for (Edge edge : outerPolygonEdges){
+			edge.changeRangeValues(x, y);
+		}
+		for (Edge[] edgeList : holeEdges){
+			for(Edge edge : edgeList){
+				edge.changeRangeValues(x, y);
+			}
+		}
 	}
 	// ---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -288,6 +311,11 @@ public class MultiPolygon {
 			// replace bottomCoord
 			if (coord.getyCoord() < bottomCoord.getyCoord())
 				bottomCoord = coord;
+			else if(coord.getyCoord() == bottomCoord.getyCoord()){
+				if(coord.getxCoord() < bottomCoord.getxCoord()){
+					bottomCoord = coord;
+				}
+			}
 		}
 		lowestCoord = bottomCoord;
 		return bottomCoord;
@@ -300,6 +328,11 @@ public class MultiPolygon {
 			// replace topCoord
 			if (coord.getyCoord() > topCoord.getyCoord())
 				topCoord = coord;
+			else if(coord.getyCoord() == topCoord.getyCoord()){
+				if(coord.getxCoord() > topCoord.getxCoord()){
+					topCoord = coord;
+				}
+			}
 		}
 		highestCoord = topCoord;
 		return topCoord;
@@ -337,7 +370,6 @@ public class MultiPolygon {
 		changedPolygon[0] = polygon[0];
 		for(int i = 1; i < polygon.length; i++){
 			changedPolygon[i] = polygon[polygon.length-i];
-			System.out.println("placing " + polygon[polygon.length-i].toString() + "to location " + i);
 		}
 		for(int i = 0; i < polygon.length; i++){
 			polygon[i] = changedPolygon[i];
@@ -352,15 +384,6 @@ public class MultiPolygon {
 		}
 		System.out.println();
 	}
-	
-	private int getCoordinateIndexOf(Coordinate currentStartPoint) {
-		int i = 0;
-		for(Coordinate coord: outerPolygon){
-			if(coord.equals(currentStartPoint))return i;
-		}
-		i++;
-		return -1;
-	}
 
 	//-----------------------------------------------------------------------------------------------------------------------------
 //	http://alienryderflex.com/polygon/
@@ -371,7 +394,6 @@ public class MultiPolygon {
 
 	public boolean pointInPolygon(Coordinate coord) {
 
-		//System.out.println("is point in polygon? " + coord);
 		int polyCorners = outerPolygon.length;
 		int i, j = polyCorners - 1;
 		boolean oddNodes = false;
@@ -389,7 +411,6 @@ public class MultiPolygon {
 			}
 			j = i;
 		}
-		//System.out.println(oddNodes);
 		boolean inHole = false;
 		//if a hole contains the point it isn't contained by the polygon
 		if(nHoles != 0){
@@ -413,7 +434,6 @@ public class MultiPolygon {
 				if(inHole) return false;
 			}
 		}
-		//System.out.println(oddNodes);
 		return oddNodes;
 	}
 
@@ -452,7 +472,7 @@ public class MultiPolygon {
 				}
 			}
 			else{
-				if(orgEdgeNum < startingCoordIndex){
+				if(orgEdgeNum <= startingCoordIndex){
 					e.setEdgeNumber(outerPolygonEdges.length + orgEdgeNum - startingCoordIndex);
 				}
 				else{
@@ -502,5 +522,217 @@ public class MultiPolygon {
 			e.calcInverseEdgeAngle();
 		}
 		
+	}
+
+	public boolean overlapping(MultiPolygon polyA) {
+		int f = 0;
+		int k;
+		boolean overlap = false;
+		if(polygonsIntersectEdgeOverlap(polyA, this))return true;
+		while(f < polyA.getOuterPolygonEdges().length && !overlap){
+			Edge edgeA = polyA.getOuterPolygonEdges()[f];
+			f++;
+			k = 0;
+			while(k < getOuterPolygonEdges().length && !overlap){
+				Edge edgeB = getOuterPolygonEdges()[k];
+				k++;
+				if(edgeA.testIntersectWithoutBorders(edgeB)){
+					overlap = true;
+				}
+				if(edgeA.containsPoint(edgeB.getStartPoint())&&!edgeB.getEndPoint().dFunctionCheck(edgeA.getStartPoint(), edgeA.getEndPoint())){
+					if(!edgeA.getStartPoint().equalValuesRounded(edgeB.getStartPoint())&&!edgeA.getStartPoint().equalValuesRounded(edgeB.getEndPoint())){
+						if(!edgeA.getEndPoint().equalValuesRounded(edgeB.getStartPoint())&&!edgeA.getEndPoint().equalValuesRounded(edgeB.getEndPoint())){
+							if(edgeB.getEndPoint().dFunction(edgeA)>0)overlap = true;
+						}
+					}
+				}
+			}
+		}
+		return overlap;
+		
+	}
+	
+	public static boolean polygonsIntersectPointInPolygon(MultiPolygon statPoly, MultiPolygon orbPoly) {
+		boolean isOnEdge;
+		boolean middlePointOnEdge;
+		boolean touchedOuterEdge = false;
+		boolean touchedHoleEdge = false;
+		int i= 1;
+		if(polygonsIntersectEdgeIntersect(statPoly, orbPoly))return true;
+		for(Coordinate coord: orbPoly.getOuterPolygon()){
+			isOnEdge = false;
+			for(Edge statEdge: statPoly.getOuterPolygonEdges()){
+				if(statEdge.containsPoint(coord)){
+					isOnEdge = true;
+					touchedOuterEdge = true;
+				}
+			}
+			for(Edge[] holes: statPoly.getHoleEdges()){
+				for(Edge statEdge: holes){
+					if(statEdge.containsPoint(coord)){
+						isOnEdge = true;
+						touchedHoleEdge = true;
+					}
+					
+				}
+			}
+			if(touchedHoleEdge && touchedOuterEdge)return true;
+			//our method for seeing if a point is in the polygon does not give a certain result for points that fall on the edge
+			if(statPoly.pointInPolygon(coord)&&!isOnEdge){
+				return true;
+			}
+			if(isOnEdge){
+				middlePointOnEdge = false;
+				Edge edgeToTest = new Edge(coord, orbPoly.getOuterPolygon()[i]);
+				for(Edge statEdge: statPoly.getOuterPolygonEdges()){
+					if(statEdge.testIntersect(edgeToTest)) return true;
+				}
+				for(Edge[] holes: statPoly.getHoleEdges()){
+					for(Edge statEdge: holes){
+						if(statEdge.testIntersect(edgeToTest)) return true;
+					}
+				}
+				
+				Coordinate middlePoint = edgeToTest.getMiddlePointEdge();
+				for(Edge statEdge: statPoly.getOuterPolygonEdges()){
+					if(statEdge.containsPoint(middlePoint)){
+						middlePointOnEdge = true;
+					}
+					
+				}
+				for(Edge[] holes: statPoly.getHoleEdges()){
+					for(Edge statEdge: holes){
+						if(statEdge.containsPoint(middlePoint)){
+							middlePointOnEdge = true;
+						}
+						
+					}
+				}
+				if(!middlePointOnEdge){
+					if(statPoly.pointInPolygon(middlePoint))return true;
+				}
+			}
+			i++;
+			if(i > orbPoly.getOuterPolygon().length-1)i = 0;
+		}
+		i = 1;
+		for(Coordinate coord: statPoly.getOuterPolygon()){
+			isOnEdge = false;
+			for(Edge statEdge: orbPoly.getOuterPolygonEdges()){
+				if(statEdge.containsPoint(coord))isOnEdge = true;
+			}
+			//our method for seeing if a point is in the polygon does not give a certain result for points that fall on the edge
+			if(!isOnEdge && orbPoly.pointInPolygon(coord)){
+				return true;
+			}
+			if(isOnEdge){
+				middlePointOnEdge = false;
+				Edge edgeToTest = new Edge(coord, statPoly.getOuterPolygon()[i]);
+				for(Edge orbEdge: orbPoly.getOuterPolygonEdges()){
+					if(orbEdge.testIntersect(edgeToTest)) return true;
+				}
+				for(Edge[] holes: orbPoly.getHoleEdges()){
+					for(Edge orbEdge: holes){
+						if(orbEdge.testIntersect(edgeToTest)) return true;
+					}
+				}
+				Coordinate middlePoint = edgeToTest.getMiddlePointEdge();
+				for(Edge orbEdge: orbPoly.getOuterPolygonEdges()){
+					if(orbEdge.containsPoint(middlePoint)) middlePointOnEdge = true;
+				}
+				for(Edge[] holes: orbPoly.getHoleEdges()){
+					for(Edge orbEdge: holes){
+						if(orbEdge.containsPoint(middlePoint)) middlePointOnEdge = true;
+					}
+				}
+				if(!middlePointOnEdge){
+					if(orbPoly.pointInPolygon(middlePoint))return true;
+				}
+			}
+			i++;
+			if(i > statPoly.getOuterPolygon().length-1)i = 0;
+		}
+		return false;
+	}
+	public static boolean polygonsIntersectEdgeIntersect(MultiPolygon statPoly, MultiPolygon orbPoly) {
+		
+		for(Edge outerStatEdge: statPoly.getOuterPolygonEdges()){
+			for(Edge outerOrbEdge : orbPoly.getOuterPolygonEdges()){
+				
+				if(outerOrbEdge.testIntersect(outerStatEdge)){
+					return true;
+				}
+			}
+		}
+		//check orb outer with stat holes
+		for(Edge outerOrbEdge: orbPoly.getOuterPolygonEdges()){
+			for(Edge[] statHoles : statPoly.getHoleEdges()){
+				for(Edge statHoleEdge: statHoles){
+					if(outerOrbEdge.testIntersect(statHoleEdge)){
+						return true;
+					}
+				}
+				
+			}
+		}
+		//check stat outer with orb holes
+		for(Edge outerStatEdge: statPoly.getOuterPolygonEdges()){
+			for(Edge[] orbHoles : orbPoly.getHoleEdges()){
+				for(Edge orbHoleEdge: orbHoles){
+					if(outerStatEdge.testIntersect(orbHoleEdge)){
+						return true;
+					}
+				}
+			}
+		}
+		//check holes
+		for(Edge[] orbHoles : orbPoly.getHoleEdges()){
+			for(Edge orbHoleEdge: orbHoles){
+				for(Edge[] statHoles : statPoly.getHoleEdges()){
+					for(Edge statHoleEdge: statHoles){
+						if(orbHoleEdge.testIntersect(statHoleEdge)){
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+
+	}
+	
+	private boolean polygonsIntersectEdgeOverlap(MultiPolygon polyA, MultiPolygon polyB) {
+		for(Edge e: polyA.getOuterPolygonEdges()){
+			for(Edge f: polyB.getOuterPolygonEdges()){
+				if(Math.abs(e.getEdgeAngle() - f.getEdgeAngle())%(Math.PI*2)==0){
+					if(!e.getStartPoint().equalValuesRounded(f.getEndPoint())&&!e.getEndPoint().equalValuesRounded(f.getStartPoint())){
+						if(e.getEndPoint().equalValuesRounded(f.getEndPoint())){
+							return true;
+						}
+						if(e.getStartPoint().equalValuesRounded(f.getStartPoint())){
+							return true;
+						}
+						if(e.containsPoint(f.getStartPoint())||e.containsPoint(f.getEndPoint())){
+							return true;
+						}
+						if(f.containsPoint(e.getStartPoint())||f.containsPoint(e.getEndPoint()))return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	public void shiftNinety() {
+		for(Coordinate coord: outerPolygon){
+			coord.rotateNinety();
+		}
+		for(Coordinate[] hole: holes){
+			for(Coordinate coord: hole){
+				coord.rotateNinety();
+			}
+		}
+		
+		createEdges();
 	}
 }

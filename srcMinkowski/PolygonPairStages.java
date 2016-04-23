@@ -9,10 +9,10 @@ import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
 /**
- * @author Stiaan
- * this class is used to prepare the stages for polygon pairs for the GUI
+ * this class is used to prepare the stages for polygon pairs for the GUI.
  * the values and methods are static to be able to add polygon pairs from every location in the code
  * and draw them in the drawtool without having to give an object to the drawtool
+ * @author Stiaan Uyttersprot
  */
 
 public class PolygonPairStages {
@@ -22,12 +22,6 @@ public class PolygonPairStages {
 	
 	static double sceneSizeX = 300;
 	static double sceneSizeY = 300;
-	
-//	public static void addPolygonPair(MultiPolygon[] multiPolyPair){
-//		aantalPolygonPairStages++;
-//		MultiPolygonsToDraw.add(multiPolyPair);
-//		
-//	}
 	
 	public static int getAantalPolygonPairStages() {
 		return aantalPolygonPairStages;
@@ -76,7 +70,6 @@ public class PolygonPairStages {
 		List<Stage> polyPairStageList = new ArrayList<>();
 		for(MultiPolygon[] multiPolys: MultiPolygonsToDraw){
 			polyPairStageList.add(drawPair(multiPolys));
-			//drawPair(multiPolys);
 			
 		}
 		return polyPairStageList;

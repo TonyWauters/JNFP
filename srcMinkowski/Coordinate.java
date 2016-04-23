@@ -1,17 +1,14 @@
-import java.math.BigInteger;
-
 /**
- *
- * @author Stiaan
+ *this class is used for storing points of a polygon
+ * @author Stiaan Uyttersprot
  * 
- *         this class is used for storing points of a polygon
+ *         
  */
 public class Coordinate {
 	private double xCoord;
 	private double yCoord;
 	
-	private static double roundingValue = 1;
-	private static double round = 1;
+	public static double round = 1;
 	
 	Coordinate(double x, double y) {
 		xCoord = x;
@@ -48,7 +45,7 @@ public class Coordinate {
 	}
 	
 	public String toNfpString(){
-		return xCoord + " " + yCoord;
+		return xCoord + ", " + yCoord;
 	}
 
 	@Override
@@ -65,6 +62,7 @@ public class Coordinate {
 
 	@Override
 	public boolean equals(Object obj) {
+		
 		if (this == obj)
 			return true;
 		if (obj == null)
@@ -72,6 +70,10 @@ public class Coordinate {
 		if (getClass() != obj.getClass())
 			return false;
 		Coordinate other = (Coordinate) obj;
+		if(Math.abs(xCoord)==0)xCoord = Math.abs(xCoord);
+		if(Math.abs(yCoord)==0)yCoord = Math.abs(yCoord);
+		if(Math.abs(other.xCoord)==0)other.xCoord = Math.abs(other.xCoord);
+		if(Math.abs(other.yCoord)==0)other.yCoord = Math.abs(other.yCoord);
 		if (Double.doubleToLongBits(xCoord) != Double.doubleToLongBits(other.xCoord))
 			return false;
 		if (Double.doubleToLongBits(yCoord) != Double.doubleToLongBits(other.yCoord))
@@ -86,21 +88,22 @@ public class Coordinate {
 		return distance;
 	}
 
+	public double shortestDistanceToEdge(Edge edge){
+		double distanceToStartPoint = distanceTo(edge.getStartPoint());
+		double anglePointEdge = edge.getStartPoint().calculateAngle(this, edge.getEndPoint());
+		double shortestDistance = distanceToStartPoint*Math.sin(anglePointEdge);
+		return shortestDistance;
+	}
 	// calculating the angle: the coordinate that calls the method is the one
 	// where the angle needs to be calculated
 	public double calculateAngle(Coordinate coord2, Coordinate coord3) {
 
 		double distA = coord2.distanceTo(coord3);
-		// System.out.println(distA);
 		double distB = this.distanceTo(coord3);
-		// System.out.println(distB);
 		double distC = this.distanceTo(coord2);
-		// System.out.println(distC);
 
 		double cosAngle = (distB * distB + distC * distC - distA * distA) / (2 * distB * distC);
-		// System.out.println(cosAngle);
 		double angle = Math.acos(cosAngle);
-		// System.out.println(angle);
 		return angle;
 	}
 
@@ -123,12 +126,20 @@ public class Coordinate {
 		return dValue;
 	}
 	
-	//check if the value is zero or not (trying to cope with very small deviation values)
+	//check if the value is zero or not, if zero the point falls on the line (trying to cope with very small deviation values)
 	public boolean dFunctionCheck(Coordinate startPoint, Coordinate endPoint) {
 		boolean touching = false;
 		double dValue = (startPoint.getxCoord() - endPoint.getxCoord()) * (startPoint.getyCoord() - yCoord)
 				- (startPoint.getyCoord() - endPoint.getyCoord()) * (startPoint.getxCoord() - xCoord);
-		if(dValue < round && dValue > -round)touching = true;
+		if(Math.abs(dValue) <= round)touching = true;
+		return touching;
+	}
+	
+	public boolean dFunctionCheck(Edge e) {
+		boolean touching = false;
+		double dValue = (e.getStartPoint().getxCoord() - e.getEndPoint().getxCoord()) * (e.getStartPoint().getyCoord() - yCoord)
+				- (e.getStartPoint().getyCoord() - e.getEndPoint().getyCoord()) * (e.getStartPoint().getxCoord() - xCoord);
+		if(Math.abs(dValue) <= round)touching = true;
 		return touching;
 	}
 
@@ -139,11 +150,10 @@ public class Coordinate {
 
 	//check if two coordinates are equal (use round to make sure mistakes by rounding in the calculations are ignored
 	public boolean equalValuesRounded(Coordinate coord) {
-
 		
-		if (Math.round(xCoord*roundingValue)/roundingValue != Math.round(coord.getxCoord()*roundingValue)/roundingValue)
+		if (Math.abs(xCoord - coord.getxCoord())>round)
 			return false;
-		if (Math.round(yCoord*roundingValue)/roundingValue != Math.round(coord.getyCoord()*roundingValue)/roundingValue)
+		if (Math.abs(yCoord - coord.getyCoord())>round)
 			return false;
 		return true;
 	}
@@ -183,11 +193,6 @@ public class Coordinate {
 		xCoord+=vector.getxCoord();
 		yCoord+=vector.getyCoord();
 	}
-	
-	public void roundCoord(){
-		xCoord = Math.round(xCoord*roundingValue)/roundingValue;
-		yCoord = Math.round(yCoord*roundingValue)/roundingValue;
-	}
 
 	public void replaceByNegative() {
 		
@@ -203,7 +208,16 @@ public class Coordinate {
 		Edge translationEdge = new Edge(edge);
 		translationEdge.setStartPoint(edgeStart);
 		translationEdge.setEndPoint(edgeEnd);
+		translationEdge.calculateRanges();
 		return translationEdge;
+		
+	}
+
+	public void rotateNinety() {
+		double helpXCoord = -yCoord;
+		
+		this.yCoord = xCoord;
+		this.xCoord = helpXCoord;
 		
 	}
 }

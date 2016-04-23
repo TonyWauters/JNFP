@@ -1,8 +1,8 @@
 /**
- *
+ * this class is used for storing points of a polygon
  * @author Stiaan
  * 
- *         this class is used for storing points of a polygon
+ *         
  */
 public class Vector {
 	private double xCoord;
@@ -12,7 +12,6 @@ public class Vector {
 	private int edgeNumber;
 
 	private boolean polygonA;
-	private static double roundingValue = 10000;
 	
 	private Edge parentEdge;
 	
@@ -109,29 +108,10 @@ public class Vector {
 
 		return dValue;
 	}
-	
-	//check if the value is zero or not (trying to cope with very small deviation values)
-	public boolean dFunctionCheck(Vector startPoint, Vector endPoint) {
-		boolean touching = false;
-		double dValue = (startPoint.getxCoord() - endPoint.getxCoord()) * (startPoint.getyCoord() - yCoord)
-				- (startPoint.getyCoord() - endPoint.getyCoord()) * (startPoint.getxCoord() - xCoord);
-		if(dValue < 1e-4 && dValue > -1e-4)touching = true;
-		return touching;
-	}
 
 	public void move(double x, double y) {
 		xCoord += x;
 		yCoord += y;
-	}
-
-	//check if two vectors are equal (use round to make sure mistakes by rounding in the calculations are ignored
-	public boolean equalValuesRounded(Vector vect) {
-
-		if (Math.round(xCoord*roundingValue)/roundingValue != Math.round(vect.getxCoord()*roundingValue)/roundingValue)
-			return false;
-		if (Math.round(yCoord*roundingValue)/roundingValue != Math.round(vect.getyCoord()*roundingValue)/roundingValue)
-			return false;
-		return true;
 	}
 
 	// this vector minus the given vector
@@ -144,12 +124,7 @@ public class Vector {
 
 		return new Vector(xCoord + point.getxCoord(), yCoord + point.getyCoord());
 	}
-
-	public boolean isBiggerThen(Vector biggestCoord) {
-
-		return false;
-	}
-
+	
 	private void calculateVectorAngle() {
 
 		vectorAngle = Math.atan2(yCoord, xCoord);

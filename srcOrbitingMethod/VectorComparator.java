@@ -1,5 +1,9 @@
 import java.util.Comparator;
 
+/**
+ * @author Stiaan Uyttersprot
+ *
+ */
 public class VectorComparator implements Comparator<Vector> {
 
 	@Override
